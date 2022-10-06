@@ -1,0 +1,8 @@
+rdflib~=6.2.0
+orkg~=0.13.6
+requests~=2.28.1
+fuzzywuzzy~=0.18.0
+matplotlib~=3.6.0
+seaborn~=0.12.0
+pandas~=1.5.0
+tqdm~=4.64.1
