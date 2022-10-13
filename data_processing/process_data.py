@@ -1,22 +1,19 @@
-import concurrent.futures
-import json
-import os
-import re
-import time
-from typing import Dict
-
 # from fuzzywuzzy import process
 # import matplotlib.pyplot as plt
+import ast
+
+import numpy as np
 import pandas as pd
+
+from orkg_data.Strategy import Strategy
+from orkg_data.orkgPyModule import ORKGPyModule
+from util import process_abstract_string
+
+
 # import seaborn as sns
 # from tqdm import tqdm
 
-# from data_processing.api_data.api_data import APIData
-from orkg_data.Strategy import Strategy
-from orkg_data.orkgPyModule import ORKGPyModule
 
-
-from util import recursive_items, process_abstract_string
 # from logs.my_logger import MyLogger
 
 # logger = MyLogger('label_data').logger
@@ -94,6 +91,38 @@ class ORKGData:
 
 if __name__ == '__main__':
     orkg_data = ORKGData(ORKGPyModule())
-    orkg_data.load_label_data()
+    # orkg_data.load_label_data()
     # create csv for labeled orkgdata
-    orkg_data.df.to_csv('data_processing/data/orkg_raw_data.csv', index=False)
+    # orkg_data.df.to_csv('data_processing/data/orkg_raw_data.csv', index=False)
+    # raw_data_df = pd.read_csv('data_processing/data/orkg_raw_data.csv')
+    # api_data = APIData(raw_data_df)
+
+    # raw_data_df['crossref_field'] = [api_data.get_crossref_data(row['doi'], index)
+    #                           for index, row in raw_data_df.iterrows()]
+
+    # raw_data_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in raw_data_df['crossref_field']]
+
+    data_df = pd.read_csv('data_processing/data/orkg_data_semschol_data.csv')
+
+    # api_data = APIData(crossref_data_df)
+
+    # crossref_data_df['semantic_field'] = [api_data.get_semantic_scholar_data(row['doi'], index)
+    #                               for index, row in crossref_data_df.iterrows()]
+
+    # crossref_data_df.to_csv('data_processing/data/orkg_data_semschol_abstracts.csv', index=False)
+
+    # make all non-existent abstract cells NaN
+    data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
+
+    # make all rows of semantic field a dict
+    data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+
+    # iterate and add abstracts if they exist in semantic scholar data
+    for index, row in data_df.iterrows():
+        sem_field = row['semantic_field']
+
+        if pd.isnull(row['abstract']):
+            if bool(sem_field):
+                data_df.at[index, 'abstract'] = sem_field['abstract']
+
+    data_df.to_csv('data_processing/data/orkg_data_semschol_abstracts.csv', index=False)
