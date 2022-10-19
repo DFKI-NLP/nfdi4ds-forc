@@ -1,6 +1,7 @@
 # from fuzzywuzzy import process
 # import matplotlib.pyplot as plt
 import ast
+import json
 
 import numpy as np
 import pandas as pd
@@ -89,6 +90,46 @@ class ORKGData:
         self._strategy = strategy
 
 
+def convert_science_labels(df):
+    # load df only with science labels
+    science_df = df.query('label == "Science"')
+    science_df['crossref_field'] = science_df['crossref_field'].apply(lambda x: ast.literal_eval(x))
+
+    # load crossref -> orkg mappings
+    crossref_path = 'data_processing/data/mappings/research_field_mapping_crossref_field.json'
+    with open(crossref_path, 'r') as infile:
+        cross_ref_mappings = json.load(infile)
+
+    for index, row in science_df.iterrows():
+        crossref_field = row['crossref_field']
+        # if crossref_field is not an empty dict
+        if bool(crossref_field):
+            if len(crossref_field['crossref_field'][0]) > 0:
+                label = crossref_field['crossref_field'][0][0]
+
+                if label in cross_ref_mappings.keys():
+                    df.at[index, 'label'] = cross_ref_mappings[label]
+
+    science_df = df.query('label == "Science"')
+    science_df['semantic_field'] = science_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+
+    semanticschol_path = 'data_processing/data/mappings/research_field_mapping_semantic_field.json'
+    with open(semanticschol_path, 'r') as infile:
+        semanticschol_mappings = json.load(infile)
+
+    for index, row in science_df.iterrows():
+        semantic_field = row['semantic_field']
+        if bool(semantic_field):
+            if semantic_field['semantic_field'] is not None:
+                if len(semantic_field['semantic_field']) > 0:
+                    label = semantic_field['semantic_field'][0]
+
+                    if label in semanticschol_mappings.keys():
+                        df.at[index, 'label'] = semanticschol_mappings[label]
+
+    return df
+
+
 if __name__ == '__main__':
     orkg_data = ORKGData(ORKGPyModule())
     # orkg_data.load_label_data()
@@ -102,7 +143,7 @@ if __name__ == '__main__':
 
     # raw_data_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in raw_data_df['crossref_field']]
 
-    data_df = pd.read_csv('data_processing/data/orkg_data_semschol_data.csv')
+    data_df = pd.read_csv('data_processing/data/orkg_data_semschol_abstracts.csv')
 
     # api_data = APIData(crossref_data_df)
 
@@ -112,17 +153,18 @@ if __name__ == '__main__':
     # crossref_data_df.to_csv('data_processing/data/orkg_data_semschol_abstracts.csv', index=False)
 
     # make all non-existent abstract cells NaN
-    data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
+    # data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
 
     # make all rows of semantic field a dict
-    data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+    # data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
 
     # iterate and add abstracts if they exist in semantic scholar data
-    for index, row in data_df.iterrows():
-        sem_field = row['semantic_field']
+    # for index, row in data_df.iterrows():
+    #    sem_field = row['semantic_field']
 
-        if pd.isnull(row['abstract']):
-            if bool(sem_field):
-                data_df.at[index, 'abstract'] = sem_field['abstract']
+    #   if pd.isnull(row['abstract']):
+    #      if bool(sem_field):
+    #         data_df.at[index, 'abstract'] = sem_field['abstract']
 
-    data_df.to_csv('data_processing/data/orkg_data_semschol_abstracts.csv', index=False)
+    data_df = convert_science_labels(data_df)
+    data_df.to_csv('data_processing/data/orkg_data_science_conversion.csv', index=False)
