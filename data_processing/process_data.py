@@ -6,6 +6,7 @@ import json
 import numpy as np
 import pandas as pd
 
+from additional_api_data.api_data import APIData
 from orkg_data.Strategy import Strategy
 from orkg_data.orkgPyModule import ORKGPyModule
 from util import process_abstract_string
@@ -91,6 +92,12 @@ class ORKGData:
 
 
 def convert_science_labels(df):
+    """
+    converts 'Science' labels in orkg data to the appropriate label from crossref and semantic scholar
+    according to mapping files
+    :param df: dataframe of data from orkg
+    :return: dataframe after converting labels
+    """
     # load df only with science labels
     science_df = df.query('label == "Science"')
     science_df['crossref_field'] = science_df['crossref_field'].apply(lambda x: ast.literal_eval(x))
@@ -130,41 +137,53 @@ def convert_science_labels(df):
     return df
 
 
-if __name__ == '__main__':
+def fetch_orkg_data():
     orkg_data = ORKGData(ORKGPyModule())
-    # orkg_data.load_label_data()
-    # create csv for labeled orkgdata
-    # orkg_data.df.to_csv('data_processing/data/orkg_raw_data.csv', index=False)
-    # raw_data_df = pd.read_csv('data_processing/data/orkg_raw_data.csv')
-    # api_data = APIData(raw_data_df)
+    orkg_data.load_label_data()
+    orkg_data.df.to_csv('data_processing/data/orkg_raw_data.csv', index=False)
 
-    # raw_data_df['crossref_field'] = [api_data.get_crossref_data(row['doi'], index)
-    #                           for index, row in raw_data_df.iterrows()]
 
-    # raw_data_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in raw_data_df['crossref_field']]
+def get_abstracts(raw_data_df):
+    """
+    Get abstracts from crossref and semantic scholar using the APIData class
+    :param raw_data_df: raw data fetched from orkg
+    :return: df with abstracts
+    """
+    data_df = raw_data_df
+    api_data = APIData(data_df)
+    data_df['crossref_field'] = [api_data.get_crossref_data(row['doi'], index)
+                                 for index, row in data_df.iterrows()]
+    data_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in data_df['crossref_field']]
 
-    data_df = pd.read_csv('data_processing/data/orkg_data_semschol_abstracts.csv')
-
-    # api_data = APIData(crossref_data_df)
-
-    # crossref_data_df['semantic_field'] = [api_data.get_semantic_scholar_data(row['doi'], index)
-    #                               for index, row in crossref_data_df.iterrows()]
-
-    # crossref_data_df.to_csv('data_processing/data/orkg_data_semschol_abstracts.csv', index=False)
+    data_df['semantic_field'] = [api_data.get_semantic_scholar_data(row['doi'], index)
+                                 for index, row in data_df.iterrows()]
 
     # make all non-existent abstract cells NaN
-    # data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
+    data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
 
     # make all rows of semantic field a dict
-    # data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+    data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
 
     # iterate and add abstracts if they exist in semantic scholar data
-    # for index, row in data_df.iterrows():
-    #    sem_field = row['semantic_field']
+    for index, row in data_df.iterrows():
+        sem_field = row['semantic_field']
 
-    #   if pd.isnull(row['abstract']):
-    #      if bool(sem_field):
-    #         data_df.at[index, 'abstract'] = sem_field['abstract']
+    if pd.isnull(row['abstract']):
+        if bool(sem_field):
+            data_df.at[index, 'abstract'] = sem_field['abstract']
 
-    data_df = convert_science_labels(data_df)
-    data_df.to_csv('data_processing/data/orkg_data_science_conversion.csv', index=False)
+    return data_df
+
+
+def remove_doi_dups(data_df):
+    """
+    removes rows of df where the doi is duplicated (keeps first one) and saves the data into a csv
+    :param data_df:
+    :return: -
+    """
+    data_df = data_df[(~data_df['doi'].duplicated()) | data_df['doi'].isna()]
+    data_df.to_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv', index=False)
+
+
+if __name__ == '__main__':
+    pass
