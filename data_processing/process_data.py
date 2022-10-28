@@ -1,6 +1,7 @@
 # from fuzzywuzzy import process
 # import matplotlib.pyplot as plt
 import ast
+import csv
 import json
 
 import numpy as np
@@ -185,5 +186,35 @@ def remove_doi_dups(data_df):
     data_df.to_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv', index=False)
 
 
+def reduce_rf(data_df):
+    """
+    Removes labels (research fields) that belong to the Arts & Humanities field +
+    Reduces labels from about 300 to about 50.
+    :param data_df: a dataframe consisting of the elements fetched from ORKG
+    :return: data_df with no Art&Humanities labels + reduced labels
+    """
+    # remove arts&humanities fields
+    with open('data_processing/data/mappings/arts_humanities_field.csv', newline='') as f:
+        reader = csv.reader(f)
+        arts_humanities = list(reader)
+    arts_humanities = [item for sublist in arts_humanities for item in sublist]
+
+    data_df = data_df[~data_df['label'].isin(arts_humanities)]
+
+    # reduce remaining research fields
+    path = 'data_processing/data/mappings/rf_reduction.json'
+    with open(path, 'r') as infile:
+        mappings_reduction = json.load(infile)
+
+    for index, row in data_df.iterrows():
+        if row['label'] in mappings_reduction.keys():
+            data_df.at[index, 'label'] = mappings_reduction[row['label']]
+
+    return data_df
+
+
 if __name__ == '__main__':
-    pass
+    df = pd.read_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv')
+    df = reduce_rf(df)
+    df.to_csv('data_processing/data/orkg_data_reduced_fields.csv', index=False)
+
