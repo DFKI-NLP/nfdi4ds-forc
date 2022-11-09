@@ -3,7 +3,9 @@
 import ast
 import csv
 import json
-
+import re
+import spacy
+import spacy_fastlang
 import numpy as np
 import pandas as pd
 
@@ -213,8 +215,76 @@ def reduce_rf(data_df):
     return data_df
 
 
-if __name__ == '__main__':
-    df = pd.read_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv')
-    df = reduce_rf(df)
-    df.to_csv('data_processing/data/orkg_data_reduced_fields.csv', index=False)
+def drop_non_papers(df):
+    """
 
+    :param df: dataframe with fetched data
+    :return: the same dataframe with rows that do not contain actual papers dropped
+    """
+    df.drop(df.index[((df['title'].str.len() <= 20) | pd.isnull(df['title'])) & (pd.isnull(df['url'])) &
+                     (pd.isnull(df['doi'])) & (pd.isnull(df['abstract'])) & (pd.isnull(df['author']))],
+            inplace=True)
+    df = df.query('title != "deleted"')
+    df = df.query('title != "Deleted"')
+
+    return df
+
+
+def remove_extra_space(text):
+    if isinstance(text, str):
+        text = text.replace(u'\xa0', u' ')
+        text = text.replace(u'\u2002', u' ')
+        text = re.sub(' +', ' ', text)
+        text = text.strip()
+        text = text.lower()
+    return text
+
+
+def cleanhtml_titles(raw_html):
+    if isinstance(raw_html, str):
+        CLEANR = re.compile('<.*?>')
+        cleantext = re.sub(CLEANR, '', raw_html)
+        return cleantext
+    return raw_html
+
+
+def standardize_doi(doi):
+    if type(doi) == 'str':
+        if doi.startswith('https://doi.org/'):
+            doi = doi[16:]
+
+    return doi
+
+
+def is_english(text):
+    nlp = spacy.load('en_core_web_sm')
+    nlp.add_pipe("language_detector")
+    doc = nlp(text)
+    return doc._.language == 'en'
+
+
+def remove_duplicates(df):
+    """
+    A function that removes duplicat papers according to title, and keeps the one with the least NaN elements in it.
+    :param df: dataframe of orkg data
+    :return: the same dataframe with dropped duplicates
+    """
+    df['crossref_field'] = df['crossref_field'].apply(lambda x: np.nan if x == '{}' else x)
+    df['semantic_field'] = df['semantic_field'].apply(lambda x: np.nan if x == '{}' else x)
+
+    df['nan_count'] = [df.loc[index].isna().sum().sum() for index, row in df.iterrows()]
+    df = df.sort_values('nan_count', ascending=True).drop_duplicates('title', keep='first').sort_index()
+    df = df.drop(columns=['nan_count'])
+
+    return df
+
+
+if __name__ == '__main__':
+    df = pd.read_csv('data_processing/data/orkg_data_reduced_fields.csv')
+    df = drop_non_papers(df)
+    df['title'] = df['title'].apply(lambda x: remove_extra_space(x))
+    df['title'] = df['title'].apply(lambda x: cleanhtml_titles(x))
+    df['doi'] = df['doi'].apply(lambda x: standardize_doi(x))
+
+    df = remove_duplicates(df)
+    df.to_csv('data_processing/data/orkg_data_processed.csv', index=False)
