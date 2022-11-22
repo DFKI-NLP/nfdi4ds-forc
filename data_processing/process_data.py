@@ -3,16 +3,14 @@
 import ast
 import csv
 import json
-import re
-import spacy
-import spacy_fastlang
 import numpy as np
 import pandas as pd
 
 from additional_api_data.api_data import APIData
 from orkg_data.Strategy import Strategy
 from orkg_data.orkgPyModule import ORKGPyModule
-from util import process_abstract_string
+from util import process_abstract_string, remove_non_english, is_english, standardize_doi, cleanhtml_titles, \
+    remove_extra_space, drop_non_papers, remove_duplicates, get_orkg_abstract_doi, get_orkg_abstract_title
 
 
 # import seaborn as sns
@@ -29,8 +27,10 @@ class ORKGData:
     """
     Provides functionality to
         - load metadata for papers from orkg
-        - query missing data from crossref and semnatic scholar api
+        - clean orkg data
+        - query missing abstracts from crossref and semnatic scholar api + use orkg abstract finder data
         - map research fields from crossref and semantic schoolar to orkg research fields
+        - reduce/merge research fields
         - collect and visualize data statistics for the orkg
     """
 
@@ -84,6 +84,139 @@ class ORKGData:
         if 'paper_id' in self.df:
             del self.df['paper_id']
 
+    def clean_orkg_data(self) -> None:
+        """
+        Cleans orkg raw data in the following steps:
+        1. Removes non-papers (papers with no adequate title and no other information)
+        2. Removes extra space from titles
+        3. Cleans html and other code remnants from titles
+        4. Standardizes doi (no "https://doi.org" prefix)
+        5. Removes duplicate papers (according to title) and keeps the one with less NaN cells
+        6. Removes non-English papers
+
+        :return:
+        """
+        self.df = drop_non_papers(self.df)
+        self.df['title'] = self.df['title'].apply(lambda x: remove_extra_space(x))
+        self.df['title'] = self.df['title'].apply(lambda x: cleanhtml_titles(x))
+        self.df['doi'] = self.df['doi'].apply(lambda x: standardize_doi(x))
+        self.df = remove_duplicates(self.df)
+        self.df = remove_non_english(self.df)
+
+    def get_abstracts_from_apis(self) -> None:
+        """
+        Get abstracts from crossref and semantic scholar using the APIData class
+        """
+        self.df = APIData(self.df)
+        self.df['crossref_field'] = [self.df.get_crossref_data(row['doi'], index)
+                                     for index, row in self.df.iterrows()]
+        self.df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in self.df['crossref_field']]
+
+        self.df['semantic_field'] = [self.df.get_semantic_scholar_data(row['doi'], index)
+                                     for index, row in self.df.iterrows()]
+
+        # make all non-existent abstract cells NaN
+        self.df.loc[self.df['abstract'] == '{}', 'abstract'] = np.NaN
+
+        # make all rows of semantic field a dict
+        self.df['semantic_field'] = self.df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+
+        # iterate and add abstracts if they exist in semantic scholar data
+        for index, row in self.df.iterrows():
+            sem_field = row['semantic_field']
+
+        if pd.isnull(row['abstract']):
+            if bool(sem_field):
+                self.df.at[index, 'abstract'] = sem_field['abstract']
+
+    def get_abstracts_from_orkg(self) -> None:
+        """
+        Gets additional abstracts from the data provided by ORKG Abstracts:
+        https://gitlab.com/TIBHannover/orkg/orkg-abstracts
+        """
+
+        orkg_df = pd.read_csv('data_processing/data/orkg_abstracts/orkg_papers.csv')
+        orkg_df['title'] = [str(title).lower() for title in orkg_df['title']]
+        self.df['orkg_abstract_doi'] = [get_orkg_abstract_doi(row['doi'], orkg_df)
+                                        for index, row in self.df.iterrows()]
+        self.df['orkg_abstract_title'] = [get_orkg_abstract_title(row['title'], orkg_df) for index, row in
+                                          self.df.iterrows()]
+
+        for index, row in self.df.iterrows():
+            abst_doi = row['orkg_abstract_doi']
+            abst_title = row['orkg_abstract_title']
+
+            if pd.isnull(row['abstract']):
+                if abst_doi != 'no_abstract_found' and is_english(abst_doi):
+                    self.df.at[index, 'abstract'] = abst_doi
+                elif abst_title != 'no_abstract_found' and is_english(abst_title):
+                    self.df.at[index, 'abstract'] = abst_title
+
+        self.df.drop(columns=['orkg_abstract_doi', 'orkg_abstract_title'])
+
+    def convert_science_labels(self) -> None:
+        """
+        converts 'Science' labels in orkg data to the appropriate label from crossref and semantic scholar
+        according to mapping files
+        """
+        # load df only with science labels
+        science_df = self.df.query('label == "Science"')
+        science_df['crossref_field'] = science_df['crossref_field'].apply(lambda x: ast.literal_eval(x))
+
+        # load crossref -> orkg mappings
+        crossref_path = 'data_processing/data/mappings/research_field_mapping_crossref_field.json'
+        with open(crossref_path, 'r') as infile:
+            cross_ref_mappings = json.load(infile)
+
+        for index, row in science_df.iterrows():
+            crossref_field = row['crossref_field']
+            # if crossref_field is not an empty dict
+            if bool(crossref_field):
+                if len(crossref_field['crossref_field'][0]) > 0:
+                    label = crossref_field['crossref_field'][0][0]
+
+                    if label in cross_ref_mappings.keys():
+                        self.df.at[index, 'label'] = cross_ref_mappings[label]
+
+        science_df = df.query('label == "Science"')
+        science_df['semantic_field'] = science_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
+
+        semanticschol_path = 'data_processing/data/mappings/research_field_mapping_semantic_field.json'
+        with open(semanticschol_path, 'r') as infile:
+            semanticschol_mappings = json.load(infile)
+
+        for index, row in science_df.iterrows():
+            semantic_field = row['semantic_field']
+            if bool(semantic_field):
+                if semantic_field['semantic_field'] is not None:
+                    if len(semantic_field['semantic_field']) > 0:
+                        label = semantic_field['semantic_field'][0]
+
+                        if label in semanticschol_mappings.keys():
+                            self.df.at[index, 'label'] = semanticschol_mappings[label]
+
+    def reduce_rf(self) -> None:
+        """
+        Removes labels (research fields) that belong to the Arts & Humanities field +
+        Reduces labels from about 300 to about 50.
+        """
+        # remove arts&humanities fields
+        with open('data_processing/data/mappings/arts_humanities_field.csv', newline='') as f:
+            reader = csv.reader(f)
+            arts_humanities = list(reader)
+        arts_humanities = [item for sublist in arts_humanities for item in sublist]
+
+        self.df = self.df[~self.df['label'].isin(arts_humanities)]
+
+        # reduce remaining research fields
+        path = 'data_processing/data/mappings/rf_reduction.json'
+        with open(path, 'r') as infile:
+            mappings_reduction = json.load(infile)
+
+        for index, row in self.df.iterrows():
+            if row['label'] in mappings_reduction.keys():
+                self.df.at[index, 'label'] = mappings_reduction[row['label']]
+
     @property
     def strategy(self) -> Strategy:
         """Load Strategy for ORKG Data"""
@@ -94,88 +227,20 @@ class ORKGData:
         self._strategy = strategy
 
 
-def convert_science_labels(df):
+def orkg_data_pipeline():
     """
-    converts 'Science' labels in orkg data to the appropriate label from crossref and semantic scholar
-    according to mapping files
-    :param df: dataframe of data from orkg
-    :return: dataframe after converting labels
+    A function that applies the ORKG data pipeline and saves the result in
+    "data_processing/data/orkg_processed_data.csv"
+    :return:
     """
-    # load df only with science labels
-    science_df = df.query('label == "Science"')
-    science_df['crossref_field'] = science_df['crossref_field'].apply(lambda x: ast.literal_eval(x))
-
-    # load crossref -> orkg mappings
-    crossref_path = 'data_processing/data/mappings/research_field_mapping_crossref_field.json'
-    with open(crossref_path, 'r') as infile:
-        cross_ref_mappings = json.load(infile)
-
-    for index, row in science_df.iterrows():
-        crossref_field = row['crossref_field']
-        # if crossref_field is not an empty dict
-        if bool(crossref_field):
-            if len(crossref_field['crossref_field'][0]) > 0:
-                label = crossref_field['crossref_field'][0][0]
-
-                if label in cross_ref_mappings.keys():
-                    df.at[index, 'label'] = cross_ref_mappings[label]
-
-    science_df = df.query('label == "Science"')
-    science_df['semantic_field'] = science_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
-
-    semanticschol_path = 'data_processing/data/mappings/research_field_mapping_semantic_field.json'
-    with open(semanticschol_path, 'r') as infile:
-        semanticschol_mappings = json.load(infile)
-
-    for index, row in science_df.iterrows():
-        semantic_field = row['semantic_field']
-        if bool(semantic_field):
-            if semantic_field['semantic_field'] is not None:
-                if len(semantic_field['semantic_field']) > 0:
-                    label = semantic_field['semantic_field'][0]
-
-                    if label in semanticschol_mappings.keys():
-                        df.at[index, 'label'] = semanticschol_mappings[label]
-
-    return df
-
-
-def fetch_orkg_data():
     orkg_data = ORKGData(ORKGPyModule())
     orkg_data.load_label_data()
-    orkg_data.df.to_csv('data_processing/data/orkg_raw_data.csv', index=False)
-
-
-def get_abstracts(raw_data_df):
-    """
-    Get abstracts from crossref and semantic scholar using the APIData class
-    :param raw_data_df: raw data fetched from orkg
-    :return: df with abstracts
-    """
-    data_df = raw_data_df
-    api_data = APIData(data_df)
-    data_df['crossref_field'] = [api_data.get_crossref_data(row['doi'], index)
-                                 for index, row in data_df.iterrows()]
-    data_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in data_df['crossref_field']]
-
-    data_df['semantic_field'] = [api_data.get_semantic_scholar_data(row['doi'], index)
-                                 for index, row in data_df.iterrows()]
-
-    # make all non-existent abstract cells NaN
-    data_df.loc[data_df['abstract'] == '{}', 'abstract'] = np.NaN
-
-    # make all rows of semantic field a dict
-    data_df['semantic_field'] = data_df['semantic_field'].apply(lambda x: ast.literal_eval(x))
-
-    # iterate and add abstracts if they exist in semantic scholar data
-    for index, row in data_df.iterrows():
-        sem_field = row['semantic_field']
-
-    if pd.isnull(row['abstract']):
-        if bool(sem_field):
-            data_df.at[index, 'abstract'] = sem_field['abstract']
-
-    return data_df
+    orkg_data.clean_orkg_data()
+    orkg_data.get_abstracts_from_apis()
+    orkg_data.get_abstracts_from_orkg()
+    orkg_data.convert_science_labels()
+    orkg_data.reduce_rf()
+    orkg_data.df.to_csv('data_processing/data/orkg_processed_data.csv', index=False)
 
 
 def remove_doi_dups(data_df):
@@ -188,103 +253,6 @@ def remove_doi_dups(data_df):
     data_df.to_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv', index=False)
 
 
-def reduce_rf(data_df):
-    """
-    Removes labels (research fields) that belong to the Arts & Humanities field +
-    Reduces labels from about 300 to about 50.
-    :param data_df: a dataframe consisting of the elements fetched from ORKG
-    :return: data_df with no Art&Humanities labels + reduced labels
-    """
-    # remove arts&humanities fields
-    with open('data_processing/data/mappings/arts_humanities_field.csv', newline='') as f:
-        reader = csv.reader(f)
-        arts_humanities = list(reader)
-    arts_humanities = [item for sublist in arts_humanities for item in sublist]
-
-    data_df = data_df[~data_df['label'].isin(arts_humanities)]
-
-    # reduce remaining research fields
-    path = 'data_processing/data/mappings/rf_reduction.json'
-    with open(path, 'r') as infile:
-        mappings_reduction = json.load(infile)
-
-    for index, row in data_df.iterrows():
-        if row['label'] in mappings_reduction.keys():
-            data_df.at[index, 'label'] = mappings_reduction[row['label']]
-
-    return data_df
-
-
-def drop_non_papers(df):
-    """
-
-    :param df: dataframe with fetched data
-    :return: the same dataframe with rows that do not contain actual papers dropped
-    """
-    df.drop(df.index[((df['title'].str.len() <= 20) | pd.isnull(df['title'])) & (pd.isnull(df['url'])) &
-                     (pd.isnull(df['doi'])) & (pd.isnull(df['abstract'])) & (pd.isnull(df['author']))],
-            inplace=True)
-    df = df.query('title != "deleted"')
-    df = df.query('title != "Deleted"')
-
-    return df
-
-
-def remove_extra_space(text):
-    if isinstance(text, str):
-        text = text.replace(u'\xa0', u' ')
-        text = text.replace(u'\u2002', u' ')
-        text = re.sub(' +', ' ', text)
-        text = text.strip()
-        text = text.lower()
-    return text
-
-
-def cleanhtml_titles(raw_html):
-    if isinstance(raw_html, str):
-        CLEANR = re.compile('<.*?>')
-        cleantext = re.sub(CLEANR, '', raw_html)
-        return cleantext
-    return raw_html
-
-
-def standardize_doi(doi):
-    if type(doi) == 'str':
-        if doi.startswith('https://doi.org/'):
-            doi = doi[16:]
-
-    return doi
-
-
-def is_english(text):
-    nlp = spacy.load('en_core_web_sm')
-    nlp.add_pipe("language_detector")
-    doc = nlp(text)
-    return doc._.language == 'en'
-
-
-def remove_duplicates(df):
-    """
-    A function that removes duplicat papers according to title, and keeps the one with the least NaN elements in it.
-    :param df: dataframe of orkg data
-    :return: the same dataframe with dropped duplicates
-    """
-    df['crossref_field'] = df['crossref_field'].apply(lambda x: np.nan if x == '{}' else x)
-    df['semantic_field'] = df['semantic_field'].apply(lambda x: np.nan if x == '{}' else x)
-
-    df['nan_count'] = [df.loc[index].isna().sum().sum() for index, row in df.iterrows()]
-    df = df.sort_values('nan_count', ascending=True).drop_duplicates('title', keep='first').sort_index()
-    df = df.drop(columns=['nan_count'])
-
-    return df
-
-
 if __name__ == '__main__':
-    df = pd.read_csv('data_processing/data/orkg_data_reduced_fields.csv')
-    df = drop_non_papers(df)
-    df['title'] = df['title'].apply(lambda x: remove_extra_space(x))
-    df['title'] = df['title'].apply(lambda x: cleanhtml_titles(x))
-    df['doi'] = df['doi'].apply(lambda x: standardize_doi(x))
+    pass
 
-    df = remove_duplicates(df)
-    df.to_csv('data_processing/data/orkg_data_processed.csv', index=False)
