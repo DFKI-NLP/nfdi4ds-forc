@@ -7,6 +7,17 @@ FILE_PATH = os.path.dirname(__file__)
 
 
 class ArxivData:
+    """
+    A class for processing arXiv data, taken from https://www.kaggle.com/datasets/Cornell-University/arxiv.
+    The data was downloaded on 25.11.22.
+    Pipeline:
+    1. Read arXiv data and processed ORKG data.
+    2. Add missing abstracts to ORKG data.
+    3. Drop duplicates from arXiv that already exist in ORKG (based on doi)
+    4. Get single-label arXiv data.
+    5. Reduce data based on distribution to overall threshold_instances.
+    6. Map arXiv labels to ORKG research fields taxonomy labels.
+    """
 
     def __init__(self,
                  arxiv_data_path="data_processing/data/arxiv_data/arxiv-metadata-oai-snapshot.json",
@@ -62,19 +73,21 @@ class ArxivData:
 
     def get_single_label_distribution(self, single_label_arxiv) -> Dict:
         """
-
-        :param single_label_arxiv:
-        :return:
+        A function that calculated the distribution of labels from the single-label instances of arXiv.
+        :param single_label_arxiv: the arXiv data filtered to instances with a sing-label.
+        :return: a dictionary consisting of 'label: number of occurences'.
         """
         single_labels_stats = single_label_arxiv.groupby("categories")["categories"].count()
         return single_labels_stats.to_dict()
 
     def get_reduced_data(self, single_label_arxiv, threshold_instances) -> pd.DataFrame:
         """
-    
+        A function that reduces the amount of overall instances in the data to a desired number (threshold_instances).
+        The reduction keeps the original distribution of labels.
         :param single_label_arxiv: the full Arxiv dataset with no reduction of fields
         :param threshold_instances: desired number of instances overall (for all labels together)
-        :return: 
+        :return: a new pandas dataframe with a length of threshold_instances, with labels distribution kept
+        as the input single_label_arxiv
         """
         self.arxiv_distribution = self.get_single_label_distribution(single_label_arxiv)
         df_length = sum(self.arxiv_distribution.values())
@@ -92,7 +105,15 @@ class ArxivData:
 
         return single_label_arxiv_reduced
 
-    def get_reduced_rows(self, label, n_instances, arxiv_df):
+    def get_reduced_rows(self, label, n_instances, arxiv_df) -> pd.DataFrame:
+        """
+        A function that gets a certain label, the number of desired instances, and a dataset,
+        and returns n_instances of randomly selected rows with the input label from arxiv_df.
+        :param label: the desired label for selection of rows
+        :param n_instances: the desired number of rows to randomly select
+        :param arxiv_df: the arXiv dataset of single-labels
+        :return: n_instances of randomly selected rows with the input label from arxiv_df
+        """
         return arxiv_df.query("categories == '{}'".format(label)).sample(n=n_instances)
 
     @staticmethod
@@ -105,9 +126,10 @@ class ArxivData:
 
     def map_arxiv_to_orkg(self, single_label_arxiv_reduced):
         """
-
-        :param single_label_arxiv_reduced:
-        :return:
+        A function that maps the arXiv categories taxonomy to the ORKG research field taxonomy labels
+        and saves the newly created dataset (with ORKG labels) as
+        'data_processing/data/arxiv_data/arxiv_reduced_orkg_labels.csv'
+        :param single_label_arxiv_reduced: the arXiv single-label dataset after reducing its instances
         """
         for index, row in single_label_arxiv_reduced.iterrows():
             single_label_arxiv_reduced.at[index, 'categories'] = self.mapping_arxiv_orkg[row['categories']]
