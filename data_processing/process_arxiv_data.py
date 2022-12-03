@@ -93,7 +93,7 @@ class ArxivData:
         df_length = sum(self.arxiv_distribution.values())
 
         self.arxiv_distribution_reduced = {label: int(count / df_length * threshold_instances) for label, count in
-                                      self.arxiv_distribution.items()}
+                                           self.arxiv_distribution.items()}
 
         single_label_arxiv_reduced = pd.DataFrame()
 
@@ -142,4 +142,3 @@ if __name__ == '__main__':
     arxiv = ArxivData()
     reduced_arxiv_data = arxiv.get_reduced_data(single_label_arxiv, 50000)
     arxiv.map_arxiv_to_orkg(reduced_arxiv_data)
-

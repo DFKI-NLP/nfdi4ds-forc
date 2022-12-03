@@ -5,6 +5,7 @@ import os
 import re
 import spacy
 import spacy_fastlang
+from nameparser import HumanName
 
 
 def recursive_items(dictionary: Any) -> str:
@@ -242,3 +243,30 @@ def get_orkg_abstract_title(title, orkg_papers):
             if str(abstract) != 'nan':
                 return abstract
     return 'no_abstract_found'
+
+
+def parse_author(name):
+    """
+    Parse author names and return them in a list according to the template: 
+    [last name, first + middle name, title, suffix]
+    """
+    if name.endswith('et al'):
+        name = name[:-6]
+        return [name, '', '', '']
+
+    return [HumanName(name).last, HumanName(name).first + ' ' + HumanName(name).middle, HumanName(name).title,
+            HumanName(name).suffix]
+
+
+# function below adapted from https://gitlab.com/TIBHannover/orkg/orkg-abstracts
+def process_abstract(text: str) -> str:
+    """
+    removes HTML tags and strips white characters.
+
+    :param text: the txt to be processed.
+    """
+    if not text:
+        return text
+
+    html_regex = '<.*?>'
+    return ' '.join(re.sub(html_regex, ' ', text).split()).lower()

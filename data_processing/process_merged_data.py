@@ -1,10 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from util import process_abstract
 
 
 class MergedData:
 
-    def __init__(self, orkg_data_path='data_processing/data/orkg_data_processed_20221125.csv',
+    def __init__(self, orkg_data_path='data_processing/data/orkg_data_processed.csv',
                  arxiv_data_path='data_processing/data/arxiv_data/arxiv_reduced_orkg_labels.csv'):
         self.orkg_df = pd.read_csv(orkg_data_path)
         self.arxiv_df = pd.read_csv(arxiv_data_path)
@@ -27,7 +28,16 @@ class MergedData:
         self.orkg_df['source'] = "orkg"
 
         merged_df = pd.concat([self.orkg_df, self.arxiv_df])
+        return merged_df
 
+    def process_abstracts(self, merged_df):
+        """
+        processes the abstract texts by removing code elements
+        :param merged_df
+        :return: the same datasets with processed abstracts
+        """
+        merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x)
+                                                            else x)
         return merged_df
 
     def visualize_nan_columns(self, merged_df):
@@ -48,6 +58,7 @@ class MergedData:
 if __name__ == '__main__':
     data = MergedData()
     merged_df = data.merge_datasets()
+    merged_df = data.process_abstracts(merged_df)
     data.visualize_nan_columns(merged_df)
 
     merged_df.to_csv('data_processing/data/merged_data.csv')

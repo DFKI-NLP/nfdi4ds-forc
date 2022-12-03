@@ -9,3 +9,4 @@ tqdm~=4.64.1
 selenium~=4.5.0
 numpy~=1.23.3
 spacy~=3.4.2
+nameparser~=1.1.2

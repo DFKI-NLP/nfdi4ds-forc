@@ -10,7 +10,7 @@ from additional_api_data.api_data import APIData
 from orkg_data.Strategy import Strategy
 from orkg_data.orkgPyModule import ORKGPyModule
 from util import process_abstract_string, remove_non_english, is_english, standardize_doi, cleanhtml_titles, \
-    remove_extra_space, drop_non_papers, remove_duplicates, get_orkg_abstract_doi, get_orkg_abstract_title
+    remove_extra_space, drop_non_papers, remove_duplicates, get_orkg_abstract_doi, get_orkg_abstract_title, parse_author
 
 
 # import seaborn as sns
@@ -95,6 +95,7 @@ class ORKGData:
         4. Standardizes doi (no "https://doi.org" prefix)
         5. Removes duplicate papers (according to title) and keeps the one with less NaN cells
         6. Removes non-English papers
+        7. Parses authors into a standardized format
 
         :return: cleaned dataframe
         """
@@ -104,6 +105,7 @@ class ORKGData:
         self.df['doi'] = self.df['doi'].apply(lambda x: standardize_doi(x))
         self.df = remove_duplicates(self.df)
         self.df = remove_non_english(self.df)
+        self.df = self.parse_authors_orkg(self.df)
 
         return self.df
 
@@ -235,6 +237,24 @@ class ORKGData:
                 self.df.at[index, 'label'] = mappings_reduction[row['label']]
 
         return self.df
+
+    def parse_authors_orkg(self, orkg_df):
+        """
+        takes the orkg_df and adds a column, authors_parsed, with the same authors parsed in a list
+        """
+        orkg_df['authors_parsed'] = ''
+        for index, row in orkg_df.iterrows():
+
+            if not pd.isna(row['author']):
+                if row['author'].startswith('['):
+                    author_list = ast.literal_eval(row['author'])
+                    authors_list_parsed = []
+                    for author in author_list:
+                        authors_list_parsed.append(parse_author(author))
+                    orkg_df.at[index, 'authors_parsed'] = authors_list_parsed
+                else:
+                    orkg_df.at[index, 'authors_parsed'] = parse_author(row['author'])
+        return orkg_df
 
     @property
     def strategy(self) -> Strategy:
