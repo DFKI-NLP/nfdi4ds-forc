@@ -1,6 +1,6 @@
 import pandas as pd
 # from additional_api_data.doi_finder import DoiFinder
-from util import process_abstract_string
+from data_cleaning_utils import process_abstract_string
 from fuzzywuzzy import fuzz
 from typing import List, Tuple, Dict
 import requests

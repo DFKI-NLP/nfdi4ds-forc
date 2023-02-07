@@ -10,3 +10,5 @@ selenium~=4.5.0
 numpy~=1.23.3
 spacy~=3.4.2
 nameparser~=1.1.2
+parsel~=1.7.0
+playwright~=1.29.1

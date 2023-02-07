@@ -11,7 +11,7 @@ class APIScheduler:
         self.ready = True
 
     def update(self):
-        """ Updates the buffer and checks the limit to make shure that the api rate limits are satisfied"""
+        """ Updates the buffer and checks the limit to make sure that the api rate limits are satisfied"""
         self.buffer.append(time.time())
         if len(self.buffer) >= self.request_limit:
             self.ready = False

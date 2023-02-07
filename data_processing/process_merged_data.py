@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from util import process_abstract
+from data_cleaning_utils import process_abstract
 
 
 class MergedData:
@@ -16,13 +16,12 @@ class MergedData:
                                               "categories": "label",
                                               "id": "arxiv_id",
                                               "submitter": "arxiv_submitter",
-                                              "journal-ref": "arxiv_journal-ref",
+                                              "journal-ref": "publisher",
                                               "report-no": "arxiv_report-no",
                                               "license": "arxiv_license",
                                               "versions": "arxiv_versions",
                                               "update_date": "arxiv_update_date"})
         self.arxiv_df = self.arxiv_df.drop(columns=["Unnamed: 0", "in_orkg_data", "multi_label"])
-        self.orkg_df = self.orkg_df.drop(columns=["orkg_abstract_doi", "orkg_abstract_title"])
 
         self.arxiv_df['source'] = "arxiv"
         self.orkg_df['source'] = "orkg"
@@ -34,7 +33,7 @@ class MergedData:
         """
         processes the abstract texts by removing code elements
         :param merged_df
-        :return: the same datasets with processed abstracts
+        :return: the same dataset with processed abstracts
         """
         merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x)
                                                             else x)
@@ -56,9 +55,10 @@ class MergedData:
 
 
 if __name__ == '__main__':
-    data = MergedData()
+    data = MergedData(orkg_data_path='data_processing/data/orkg_data_processed_rg.csv')
     merged_df = data.merge_datasets()
     merged_df = data.process_abstracts(merged_df)
     data.visualize_nan_columns(merged_df)
 
     merged_df.to_csv('data_processing/data/merged_data.csv')
+    
