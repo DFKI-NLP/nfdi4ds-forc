@@ -1,5 +1,3 @@
-# from fuzzywuzzy import process
-# import matplotlib.pyplot as plt
 import ast
 import csv
 import json
@@ -19,15 +17,6 @@ from playwright.sync_api import sync_playwright
 
 from calendar import month_abbr, calendar
 from fuzzywuzzy import fuzz
-
-
-# import seaborn as sns
-
-
-# from logs.my_logger import MyLogger
-
-# logger = MyLogger('label_data').logger
-# FILE_PATH = os.path.dirname(__file__)
 
 
 class ORKGData:
@@ -423,18 +412,19 @@ class ORKGData:
 
     def reduce_rf(self) -> pd.DataFrame:
         """
-        Removes labels (research fields) that belong to the Arts & Humanities field +
+        Re-label Arts and Humanities sub-fields to the higher level class +
         Reduces labels from about 300 to about 50.
 
         :return: dataframe reduced to 51 labels
         """
-        # remove arts&humanities fields
+        # re-label arts&humanities fields
         with open('data_processing/data/mappings/arts_humanities_field.csv', newline='') as f:
             reader = csv.reader(f)
             arts_humanities = list(reader)
+
         arts_humanities = [item for sublist in arts_humanities for item in sublist]
 
-        self.df = self.df[~self.df['label'].isin(arts_humanities)]
+        self.df['label'] = ['Arts and Humanities' for item in self.df['label'] if item.isin(arts_humanities)]
 
         # reduce remaining research fields
         path = 'data_processing/data/mappings/rf_reduction.json'
