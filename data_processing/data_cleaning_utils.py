@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import spacy
 from nameparser import HumanName
+import spacy_fastlang
 
 
 def process_abstract_string(abstract: str) -> str:
