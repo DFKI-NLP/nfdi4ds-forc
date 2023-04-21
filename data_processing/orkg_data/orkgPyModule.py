@@ -9,7 +9,7 @@ import json
 
 class ORKGPyModule(Strategy):
     """
-    Gets meta data ORKG for papers from ORKG API
+    Gets metadata of papers from the ORKG API.
     """
 
     def __init__(self):
@@ -57,7 +57,7 @@ class ORKGPyModule(Strategy):
                 if len(content) < int(size):
                     break
 
-        print('ready')
+        print('Ready')
         return statement_data
 
     def get_statement_by_subject(self, paper_ids: List, meta_ids: Dict) -> Dict[str, list]:

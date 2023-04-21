@@ -5,7 +5,7 @@ from typing import List, Dict
 
 class RDFDump(Strategy):
     """
-    Gets meta data ORKG for papers from RDF Dump
+    Gets metadata for papers from the RDF Dump of ORKG.
     """
     def __init__(self, parse=True):
         """

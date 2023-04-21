@@ -24,11 +24,10 @@ class ORKGData:
     Provides functionality to:
         - Load metadata for papers from ORKG.
         - Clean orkg data.
-        - Query missing abstracts from: Crossref and semnatic scholar APIs + orkg Abstract Finder repo +
-        web scraping ResearchGate.
+        - Query missing abstracts using: Crossref, S2AG, ORKG Abstract Finder repo, or ResearchGate.
         - For papers labelled as 'Science' in ORKG, get the correct label from Crossref/Semantic Scholar.
-        - Map research fields from Crossref and SemanticScholar to ORKG research fields.
         - Integrate manual re-labeling of remaining papers tagged as 'Science'.
+        - Map research fields from Crossref and SemanticScholar to ORKG research fields.
         - Merge research fields to reduce their number.
     """
 
@@ -45,7 +44,7 @@ class ORKGData:
         self.scheduler = []
         self.paper_index_list = []
 
-        self.predicate_id = 'P30'
+        self.predicate_id = 'P30' # the id of the predicate 'research field' in ORKG
         self.meta_ids = {
             'doi': 'http://orkg.org/orkg/predicate/P26',
             'author': 'http://orkg.org/orkg/predicate/P27',

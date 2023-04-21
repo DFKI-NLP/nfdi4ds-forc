@@ -4,7 +4,7 @@ from typing import Dict, List
 
 class Strategy(ABC):
     """
-    Interface that describes the methods needed to get metadata for all papers in the orkg
+    Interface that describes the methods needed to get metadata for all papers from the ORKG.
     """
 
     @abstractmethod
