@@ -2,15 +2,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from data_cleaning_utils import process_abstract
 
+from arxiv_data import ArxivData
+
 
 class MergedData:
+    """
+    This class merges the arxiv and orkg datasets and processes the abstracts. It can also visualize the number of NaN
+    elements per column in the merged dataset.
 
-    def __init__(self, orkg_data_path='data_processing/data/orkg_data_processed.csv',
-                 arxiv_data_path='data_processing/data/arxiv_data/arxiv_reduced_orkg_labels.csv'):
-        self.orkg_df = pd.read_csv(orkg_data_path)
-        self.arxiv_df = pd.read_csv(arxiv_data_path)
+    It saves the merged dataset to data_processing/data/merged_data.csv.
+    """
 
-    def merge_datasets(self) -> pd.DataFrame:
+    def __init__(self):
+        self.arxiv_data = ArxivData()
+        self.orkg_df, self.arxiv_df = arxiv_data.run()
+
+    def run(self) -> None:
+        """
+        Runs the following methods:
+        - merge_datasets
+        - process_abstracts
+        - visualize_nan_columns
+        Saves the merged dataset to data_processing/data/merged_data.csv.
+        """
+        merged_df = self._merge_datasets()
+        merged_df = self._process_abstracts(merged_df)
+        merged_df.to_csv('data_processing/data/merged_data.csv')
+        self._visualize_nan_columns(merged_df)
+
+    def _merge_datasets(self) -> pd.DataFrame:
+        """
+        Merges the arxiv and orkg datasets.
+        """
         self.arxiv_df = self.arxiv_df.rename(columns=
                                              {"authors": "author",
                                               "categories": "label",
@@ -29,17 +52,20 @@ class MergedData:
         merged_df = pd.concat([self.orkg_df, self.arxiv_df])
         return merged_df
 
-    def process_abstracts(self, merged_df):
+    def _process_abstracts(self, merged_df: pd.DataFrame) -> pd.DataFrame:
         """
         processes the abstract texts by removing code elements
         :param merged_df
         :return: the same dataset with processed abstracts
         """
         merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x)
-                                                            else x)
+        else x)
         return merged_df
 
-    def visualize_nan_columns(self, merged_df):
+    def _visualize_nan_columns(self, merged_df: pd.DataFrame):
+        """
+        Visualizes the number of NaN elements per column in merged_df.
+        """
         columns = merged_df.columns.to_list()
         nan_info = {}
         for column in columns:
@@ -55,10 +81,4 @@ class MergedData:
 
 
 if __name__ == '__main__':
-    data = MergedData(orkg_data_path='data_processing/data/orkg_data_processed_rg.csv')
-    merged_df = data.merge_datasets()
-    merged_df = data.process_abstracts(merged_df)
-    data.visualize_nan_columns(merged_df)
-
-    merged_df.to_csv('data_processing/data/merged_data.csv')
-    
+    merged_data = MergedData()
