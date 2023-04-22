@@ -58,8 +58,7 @@ class MergedData:
         :param merged_df
         :return: the same dataset with processed abstracts
         """
-        merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x)
-        else x)
+        merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x) else x)
         return merged_df
 
     def _visualize_nan_columns(self, merged_df: pd.DataFrame):
@@ -82,3 +81,4 @@ class MergedData:
 
 if __name__ == '__main__':
     merged_data = MergedData()
+    merged_data.run()

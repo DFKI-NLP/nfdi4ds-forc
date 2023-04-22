@@ -4,6 +4,7 @@ import os
 from typing import Dict
 
 from data_processing.arxiv_data_reduction import ArxivDataReduction
+from data_processing.orkg_data import ORKGData
 
 FILE_PATH = os.path.dirname(__file__)
 
@@ -28,7 +29,7 @@ class ArxivData:
 
     def __init__(self,
                  arxiv_data_path="data_processing/data/arxiv_data/arxiv-metadata-oai-snapshot.json",
-                 orkg_data_df_path="data_processing/data/orkg_data_processed_20221124.csv",
+                 orkg_data_df_path="",
                  threshold_instances=50000):
         self.arxiv_data_path = arxiv_data_path
         self.arxiv_df = pd.read_json(self.arxiv_data_path, lines=True)
@@ -40,6 +41,13 @@ class ArxivData:
         self.arxiv_distribution_reduced = {}
         self.reduced_data = ArxivDataReduction(self.arxiv_df, self.arxiv_labels,
                                                self.arxiv_distribution, self.arxiv_distribution_reduced)
+
+        # read orkg data from csv if path is given, if not, run ORKGData class
+        if orkg_data_df_path != "":
+            self.orkg_df = pd.read_csv(orkg_data_df_path)
+        else:
+            orkg_data = ORKGData()
+            self.orkg_df = orkg_data.run()
 
     def run(self) -> (pd.DataFrame, pd.DataFrame):
         """
