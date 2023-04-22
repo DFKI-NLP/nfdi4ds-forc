@@ -2,7 +2,7 @@ import time
 
 
 class APIScheduler:
-    """ Scheduler for Semnatic Scholar API to prevent to get banned """
+    """ Scheduler for Semnatic Scholar API to prevent getting banned """
 
     def __init__(self):
         self.request_limit = 100

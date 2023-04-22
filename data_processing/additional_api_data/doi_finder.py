@@ -24,7 +24,7 @@ FILE_PATH = os.path.dirname(__file__)
 
 class DoiFinder:
     """
-    class that manages to find dois and meta data of papers on semantic schoolar
+    class that manages to find dois and metadata of papers on semantic scholar
     """
 
     def __init__(self):
@@ -33,7 +33,7 @@ class DoiFinder:
         https://sites.google.com/a/chromium.org/chromedriver/downloads
         """
         self.proxy_list = []
-        # self._set_proxies()
+        self._set_proxies()
         self.proxy_limit = 10
         self.count = 0
 
@@ -42,7 +42,7 @@ class DoiFinder:
         assert self.opts.headless  # Operating in headless mode
         self.browser = Chrome(executable_path=os.path.join(FILE_PATH, "../data/chromedriver.exe"), options=self.opts)
 
-    def _set_proxies(self):
+    def _set_proxies(self) -> None:
         """
         set proxies to cover IP and run requests from different IPs to avoid getting blocked
 
@@ -61,7 +61,7 @@ class DoiFinder:
             "proxyType": "MANUAL",
         }
 
-    def _restart_proxy(self):
+    def _restart_proxy(self) -> None:
         """
         restarts proxies after fix limit of requests was reached and randomly select new ones
 
@@ -77,10 +77,9 @@ class DoiFinder:
         }
         self.browser = Chrome(executable_path="../data/chromedriver.exe", options=self.opts)
 
-    def scrape_data_from_semantic_scholar(self, title: str) -> Dict:
+    def scrape_data_from_s2ag(self, title: str) -> Dict:
         """
-        uses selenium and the paper title to find paper meta infos on semantic schoolar
-        scrapes this meta data into a
+        uses selenium and the paper title to find paper meta info on semantic scholar
 
         Parameters
         ----------
@@ -162,7 +161,7 @@ class DoiFinder:
 
         return data
 
-    def close_session(self):
+    def close_session(self) -> None:
         """ close headless selenium browser"""
         self.browser.quit()
 

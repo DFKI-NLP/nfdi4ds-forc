@@ -48,14 +48,13 @@ class DataValidation:
         api_title = api_title.encode("ascii", "ignore").decode()
         orkg_title = orkg_title.encode("ascii", "ignore").decode()
 
-
         return validation_score >= self.validation_level
 
     def _title_validation(self, api_title: str, orkg_title: str) -> int:
         score = 1 if fuzz.ratio(api_title.lower(), orkg_title.lower()) > 95 else 0
         return score
 
-    def _doi_validation(self, api_doi: str, orkg_doi: str):
+    def _doi_validation(self, api_doi: str, orkg_doi: str) -> int:
         score = 1 if fuzz.ratio(api_doi, orkg_doi) > 95 else 0
         return score
 

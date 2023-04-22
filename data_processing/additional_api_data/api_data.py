@@ -1,5 +1,5 @@
 import pandas as pd
-# from additional_api_data.doi_finder import DoiFinder
+from additional_api_data.doi_finder import DoiFinder
 from data_cleaning_utils import process_abstract_string
 from fuzzywuzzy import fuzz
 from typing import List, Tuple, Dict
@@ -17,7 +17,7 @@ FILE_PATH = os.path.dirname(__file__)
 
 class APIData:
     """
-    Provides access to APIs of semantic scholar and crossref.\n
+    Provides access to APIs of semantic scholar (S2AG) and crossref.\n
     DATA VALIDATION POLICY:
         - validate data from API with author check
         - scraped data won't be used if doi was scraped
@@ -27,7 +27,7 @@ class APIData:
     See validation in function _author_validation()
     """
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, orkg_df: pd.DataFrame):
         """
         Gets initialized with obj reference of pandas dataframe that stores all papers.
         It is mandatory to provide a dataframe that contains the columns: title, author, url, publisher
@@ -38,7 +38,7 @@ class APIData:
             obj reference
         """
         assert 'title' in df and 'author' in df and 'publisher' in df and 'url' in df
-        self.df = df
+        self.orkg_df = orkg_df
         self.api_scheduler = APIScheduler()
         self.data_validation = DataValidation(level=2)
 
@@ -61,7 +61,7 @@ class APIData:
         if doi:
             crossref_url = 'https://api.crossref.org/works/' + str(doi)
         else:
-            url_encoded_title = urllib.parse.quote_plus(self.df.at[index, 'title'])
+            url_encoded_title = urllib.parse.quote_plus(self.orkg_df.at[index, 'title'])
             crossref_url = 'https://api.crossref.org/works?rows=5&query.bibliographic=' + url_encoded_title
 
         try:
@@ -86,7 +86,7 @@ class APIData:
 
         return data_dict
 
-    def get_semantic_scholar_data(self, doi: str, index: int) -> Dict:
+    def get_s2ag_data(self, doi: str, index: int) -> Dict:
         """
         Provides dictionary of data collected from semantic scholar api.
 
@@ -103,27 +103,27 @@ class APIData:
             Dict that holds api data
         """
         if not doi:
-            scraped_data = self._scrape_data_from_semantic(index)
+            scraped_data = self._scrape_data_from_s2ag(index)
             doi = scraped_data.get('doi', '')
 
-            if not doi and 'author' in scraped_data and self.df.at[index, 'author']:
+            if not doi and 'author' in scraped_data and self.orkg_df.at[index, 'author']:
                 return self._process_scraped_data(index, scraped_data)
 
-        semantic_scholar_url = 'https://api.semanticscholar.org/v1/paper/' + str(doi)
+        s2ag_url = 'https://api.semanticscholar.org/v1/paper/' + str(doi)
         self.api_scheduler.update()
 
         try:
-            response = requests.get(semantic_scholar_url)
+            response = requests.get(s2ag_url)
 
         except ConnectionError:
             time.sleep(60)
-            response = requests.get(semantic_scholar_url)
+            response = requests.get(s2ag_url)
 
         data_dict = {}
 
         if response.ok:
             content_dict_scholar = json.loads(response.content)
-            data_dict = self._process_api_data_semantic(content_dict_scholar, index)
+            data_dict = self._process_api_data_s2ag(content_dict_scholar, index)
 
         return data_dict
 
@@ -148,11 +148,11 @@ class APIData:
         paper_found = True
 
         for item in message.get('items', []):
-            if self.df.at[index, 'title'].lower() == item.get('title', '')[0].lower():
+            if self.orkg_df.at[index, 'title'].lower() == item.get('title', '')[0].lower():
                 api_doi = item.get('DOI', '')
                 message = item
                 break
-            elif fuzz.ratio(self.df.at[index, 'title'].lower(), item.get('title', '')[0].lower()) > 95:
+            elif fuzz.ratio(self.orkg_df.at[index, 'title'].lower(), item.get('title', '')[0].lower()) > 95:
                 api_doi = item.get('DOI', '')
                 message = item
                 break
@@ -169,7 +169,7 @@ class APIData:
 
         return message, paper_found
 
-    def _process_api_data_crossref(self, message, index) -> Dict:
+    def _process_api_data_crossref(self, index: int, message: Dict) -> Dict:
         """
         Provides data dict from processed data of crossref api.
         Adds publisher, doi and url if available.
@@ -185,16 +185,16 @@ class APIData:
         -------
         Tuple[str, List]
         """
-        # authors = [person.get('given', '') + ' ' + person.get('family', '') for person in message.get('author', [])]
+        authors = [person.get('given', '') + ' ' + person.get('family', '') for person in message.get('author', [])]
 
-        #valid_data = self.data_validation.validate_data(
-         #   message.get('title', '')[0], self.df.at[index, 'title'], authors, self.df.at[index, 'author'],
-          #  message.get('DOI', ''), self.df.at[index, 'doi']
-       # )
+        valid_data = self.data_validation.validate_data(
+         message.get('title', '')[0], self.orkg_df.at[index, 'title'], authors, self.orkg_df.at[index, 'author'],
+         message.get('DOI', ''), self.orkg_df.at[index, 'doi']
+       )
 
         data_dict = {}
-        # if valid_data:
-        abstract = process_abstract_string(message.get('abstract', ''))
+        if valid_data:
+            abstract = process_abstract_string(message.get('abstract', ''))
 
         data_dict['abstract'] = abstract
         data_dict['crossref_field'] = message.get('subject', []),
@@ -204,7 +204,7 @@ class APIData:
 
         return data_dict
 
-    def _scrape_data_from_semantic(self, index: int) -> Dict:
+    def _scrape_data_from_s2ag(self, index: int) -> Dict:
         """
         Provides scraped data from semantic scholar.
         Uses the class DoiFinder to scrape data with selenium
@@ -222,7 +222,7 @@ class APIData:
         doi_finder = DoiFinder()
 
         try:
-            scraped_data = doi_finder.scrape_data_from_semantic_scholar(self.df.at[index, 'title'])
+            scraped_data = doi_finder.scrape_data_from_s2ag(self.orkg_df.at[index, 'title'])
         except Exception as e:
             print(f"Exception in DOIFinder{e}")
 
@@ -246,8 +246,8 @@ class APIData:
         Dict
         """
         valid_data = self.data_validation.validate_data(
-            scraped_data.get('title', ''), self.df.at[index, 'title'], scraped_data.get('author', ''),
-            self.df.at[index, 'author'], scraped_data.get('DOI', ''), self.df.at[index, 'doi']
+            scraped_data.get('title', ''), self.orkg_df.at[index, 'title'], scraped_data.get('author', ''),
+            self.orkg_df.at[index, 'author'], scraped_data.get('DOI', ''), self.orkg_df.at[index, 'doi']
         )
 
         data_dict = {}
@@ -258,9 +258,9 @@ class APIData:
 
         return data_dict
 
-    def _process_api_data_semantic(self, content_dict_scholar: Dict, index: int) -> Dict:
+    def _process_api_data_s2ag(self, index: int, content_dict_scholar: Dict) -> Dict:
         """
-        Provides abstract and research field data from processed data of semantic scholar api.
+        Provides abstract and research field data from processed data of semantic scholar api (s2ag).
         Adds edit publisher, doi and url if available.
 
         Parameters
@@ -276,14 +276,14 @@ class APIData:
         """
         author_names = [person.get('name', '') for person in content_dict_scholar.get('authors', [])]
 
-       # valid_data = self.data_validation.validate_data(
-        #    content_dict_scholar.get('title', ''), self.df.at[index, 'title'], author_names,
-         #   self.df.at[index, 'author'], content_dict_scholar.get('doi', ''), self.df.at[index, 'doi']
-        #)
-
+        valid_data = self.data_validation.validate_data(
+        content_dict_scholar.get('title', ''), self.orkg_df.at[index, 'title'], author_names,
+        self.orkg_df.at[index, 'author'], content_dict_scholar.get('doi', ''), self.orkg_df.at[index, 'doi']
+    )
         data_dict = {}
-        #if valid_data:
-        abstract = process_abstract_string(content_dict_scholar.get('abstract', ''))
+        if valid_data:
+            abstract = process_abstract_string(content_dict_scholar.get('abstract', ''))
+
         data_dict['abstract'] = abstract
         data_dict['semantic_field'] = content_dict_scholar.get('fieldsOfStudy', [])
         data_dict['publisher'] = content_dict_scholar.get('venue', '')
