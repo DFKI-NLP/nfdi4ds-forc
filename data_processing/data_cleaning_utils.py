@@ -69,7 +69,7 @@ def standardize_doi(doi):
     :param doi: doi of papers fetched from ORKG
     :return: the same doi without the predix "https://doi.org/"
     """
-    if type(doi) == 'str':
+    if type(doi) == str:
         if doi.startswith('https://doi.org/'):
             doi = doi[16:]
 
@@ -188,3 +188,16 @@ def process_abstract(text: str) -> str:
 
     html_regex = '<.*?>'
     return ' '.join(re.sub(html_regex, ' ', text).split()).lower()
+
+
+def remove_punctuation(text):
+    """
+    Remove all punctuation marks from the given text.
+    """
+    # Create a translation table with all punctuation marks mapped to None
+    translator = str.maketrans('', '', string.punctuation)
+
+    # Remove punctuation using the translation table
+    text_without_punctuation = text.translate(translator)
+
+    return text_without_punctuation

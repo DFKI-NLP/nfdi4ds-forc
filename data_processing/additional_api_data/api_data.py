@@ -9,6 +9,10 @@ import json
 import os
 import time
 
+import string
+import pyalex
+from pyalex import Works
+
 from additional_api_data.api_scheduler import APIScheduler
 from additional_api_data.data_validation import DataValidation
 
@@ -124,6 +128,43 @@ class APIData:
         if response.ok:
             content_dict_scholar = json.loads(response.content)
             data_dict = self._process_api_data_s2ag(content_dict_scholar, index)
+
+        return data_dict
+
+    def get_openalex_data(self, title:str, index: int) -> Dict:
+        """
+        Provides dictionary of data collected from OpenAlex using the pyalex library.
+
+        Parameters
+        ----------
+        title: str
+            title of queried paper
+        index: int
+            index of paper in pandas dataframe
+
+        Returns
+        -------
+        Dict
+            Dict that holds api data
+        """
+
+        if pd.isnull(title):
+            return {}
+
+        try:
+            openalex_data = Works().search_filter(title=title).get()
+
+        except ConnectionError:
+            time.sleep(60)
+            openalex_data = Works().search_filter(title=title).get()
+
+        data_dict = {}
+
+        data_dict['title'] = title
+        if openalex_data != []:
+            data_dict['abstract'] = openalex_data[0]['abstract']
+        else:
+            data_dict['abstract'] = np.nan
 
         return data_dict
 

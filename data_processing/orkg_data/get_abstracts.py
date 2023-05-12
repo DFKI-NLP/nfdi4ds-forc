@@ -1,11 +1,18 @@
 import pandas as pd
 import numpy as np
+
+import string
+import pyalex
+from pyalex import Works
+
 from data_processing.data.data_api import APIData
+from data_processing.orkg_data.data_cleaning_utils import remove_punctuation
 
 
 class DataAbstracts:
-    def __init__(self, orkg_df: pd.DataFrame):
+    def __init__(self, orkg_df: pd.DataFrame, email: str):
         self.orkg_df = orkg_df
+        self.email = email
 
     def run(self) -> pd.DataFrame:
         """
@@ -26,7 +33,7 @@ class DataAbstracts:
                                           for index, row in self.orkg_df.iterrows()]
         self.orkg_df['abstract'] = [ab['abstract'] if ab != {} else {} for ab in self.orkg_df['crossref_field']]
 
-        self.orkg_df['semantic_field'] = [api_data.get_semantic_scholar_data(row['doi'], index)
+        self.orkg_df['semantic_field'] = [api_data.get_s2ag_data(row['doi'], index)
                                           for index, row in self.orkg_df.iterrows()]
 
         # make all non-existent abstract cells NaN
@@ -42,6 +49,19 @@ class DataAbstracts:
         if pd.isnull(row['abstract']):
             if bool(sem_field):
                 self.orkg_df.at[index, 'abstract'] = sem_field['abstract']
+
+        self.orkg_df['openalex_field'] = [api_data.get_openalex_data(row['title'], index)
+                                          for index, row in self.orkg_df.iterrows()]
+
+        # make all non-existent abstract cells NaN
+        self.orkg_df.loc[self.orkg_df['abstract'] == '{}', 'abstract'] = np.NaN
+
+        # make all rows of openalex field a dict
+        self.orkg_df['openalex_field'] = self.orkg_df['openalex_field'].apply(lambda x: ast.literal_eval(x))
+
+        if pd.isnull(row['abstract']):
+            if bool(sem_field):
+                self.orkg_df.at[index, 'abstract'] = openalex_field['abstract']
 
         return self.orkg_df
 
@@ -73,3 +93,6 @@ class DataAbstracts:
         self.orkg_df.drop(columns=['orkg_abstract_doi', 'orkg_abstract_title'])
 
         return self.orkg_df
+
+
+
