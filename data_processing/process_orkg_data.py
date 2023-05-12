@@ -11,7 +11,6 @@ from data_cleaning_utils import process_abstract_string, is_english, get_orkg_ab
 from orkg_data.clean_data import ORKGDataCleaner
 from orkg_data.science_label_converter import ScienceLabelConverter
 from orkg_data.abstracts import DataAbstracts
-from orkg_data.researchgate_scraper import RGScraper
 
 
 class ORKGData:
@@ -19,7 +18,7 @@ class ORKGData:
     Provides functionality to:
         - Load metadata for papers from ORKG.
         - Clean orkg data using the ORKGDataCleaner class.
-        - Query missing abstracts using: Crossref, S2AG, ORKG Abstract Finder repo, or ResearchGate.
+        - Query missing abstracts using: Crossref, S2AG, OpenAlex, or ORKG Abstract Finder repo.
         - For papers labelled as 'Science' in ORKG, get the correct label from Crossref/Semantic Scholar.
         - Integrate manual re-labeling of remaining papers tagged as 'Science'.
         - Merge research fields to reduce their number.
@@ -54,7 +53,6 @@ class ORKGData:
             - Clean ORKG data using the ORKGDataCleaner class.
             - Query additional abstracts from APIs using the DataAbstracts class.
             - Convert 'Science' labels to correct labels using the ScienceLabelConverter class.
-            - Scrape ResearchGate for missing abstracts and correcting dates using the RGScraper class.
             - Merge research fields to reduce their number.
         The output is the processed ORKG dataset in the format of a pd.DataFrame.
         """
@@ -62,7 +60,6 @@ class ORKGData:
         self.orkg_df = ORKGDataCleaner(self.orkg_df).run()
         self.orkg_df = DataAbstracts(self.orkg_df).run()
         self.orkg_df = ScienceLabelConverter(self.orkg_df).run()
-        self.orkg_df = RGScraper(self.orkg_df).run()
         self.orkg_df = self._reduce_rf()
 
         return self.orkg_df
@@ -133,10 +130,3 @@ def remove_doi_dups(data_df):
     data_df = data_df[(~data_df['doi'].duplicated()) | data_df['doi'].isna()]
     data_df.to_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv', index=False)
 
-
-if __name__ == '__main__':
-    df = pd.read_csv('data_processing/data/orkg_data_webscraped_fuzz.csv')
-    df['researchgate_metadata'] = [ast.literal_eval(metadata) for metadata in df['researchgate_metadata']]
-    orkg_data = ORKGData(ORKGPyModule())
-    orkg_df = orkg_data.get_metadata_from_researchgate(df)
-    orkg_df.to_csv('data_processing/data/orkg_data_webscraped_NEW.csv', index=False)
