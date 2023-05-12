@@ -1,12 +1,7 @@
 import pandas as pd
 import numpy as np
 
-import string
-import pyalex
-from pyalex import Works
-
 from data_processing.data.data_api import APIData
-from data_processing.orkg_data.data_cleaning_utils import remove_punctuation
 
 
 class DataAbstracts:
