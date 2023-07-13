@@ -6,11 +6,12 @@ import pandas as pd
 from typing import Dict
 from orkg_data.Strategy import Strategy
 from orkg_data.orkgPyModule import ORKGPyModule
-from data_cleaning_utils import process_abstract_string, is_english, get_orkg_abstract_doi, get_orkg_abstract_title
+from data_cleaning_utils import process_abstract_string, get_orkg_abstract_doi, get_orkg_abstract_title
 
 from orkg_data.clean_data import ORKGDataCleaner
 from orkg_data.science_label_converter import ScienceLabelConverter
 from orkg_data.abstracts import DataAbstracts
+
 
 
 class ORKGData:

@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Dict
 
-from data_cleaning_utils import remove_non_english, standardize_doi, cleanhtml_titles, remove_extra_space, \
+from data_cleaning_utils import standardize_doi, cleanhtml_titles, remove_extra_space, \
     drop_non_papers, remove_duplicates, parse_author, remove_punctuation
 
 
@@ -18,7 +18,6 @@ class ORKGDataCleaner:
         3. Cleans html and other code remnants from titles.
         4. Standardizes doi (no "https://doi.org" prefix).
         5. Removes duplicate papers (according to title) and keeps the one with less NaN cells.
-        6. Removes non-English papers.
         7. Parses authors into a standardized format.
 
         :return: cleaned dataframe
@@ -29,7 +28,6 @@ class ORKGDataCleaner:
         self.orkg_df['title'] = self.orkg_df['title'].apply(lambda x: remove_punctuation(x))
         self.orkg_df['doi'] = self.orkg_df['doi'].apply(lambda x: standardize_doi(x))
         self.orkg_df = remove_duplicates(self.orkg_df)
-        self.orkg_df = remove_non_english(self.orkg_df)
         self.orkg_df = self._parse_authors_orkg(self.orkg_df)
 
         return self.df

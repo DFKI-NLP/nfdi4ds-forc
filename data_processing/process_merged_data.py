@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from data_cleaning_utils import process_abstract
+from data_cleaning_utils import process_abstract, remove_non_english
 
 from arxiv_data import ArxivData
 
@@ -22,11 +22,13 @@ class MergedData:
         Runs the following methods:
         - merge_datasets
         - process_abstracts
+        - remove_non_english
         - visualize_nan_columns
         Saves the merged dataset to data_processing/data/merged_data.csv.
         """
         merged_df = self._merge_datasets()
         merged_df = self._process_abstracts(merged_df)
+        merged_df = remove_non_english(merged_df)
         merged_df.to_csv('data_processing/data/merged_data.csv')
         self._visualize_nan_columns(merged_df)
 

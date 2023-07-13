@@ -2,7 +2,23 @@ import pandas as pd
 import re
 import spacy
 from nameparser import HumanName
-import spacy_fastlang
+import fasttext
+
+
+class LanguageIdentification:
+    """
+    This class will be used for identifying the language of titles and abstracts and removing those
+    with non-English text.
+    """
+
+    def __init__(self):
+        # This file needs to be downloaded from https://fasttext.cc/docs/en/language-identification.html
+        pretrained_lang_model = "lid.176.bin"
+        self.model = fasttext.load_model(pretrained_lang_model)
+
+    def predict_lang(self, text):
+        predictions = self.model.predict(text, k=1)  # returns top 1 matching languages
+        return predictions
 
 
 def process_abstract_string(abstract: str) -> str:
@@ -78,14 +94,13 @@ def standardize_doi(doi):
 
 def is_english(text):
     """
-    A function that checks if a text is in English using SpaCy language detection.
-    :param text: some text
+    A function that checks if a text is in English using fasttext language detection.
+    :param text: text
     :return: True if the input text is in English, False otherwise
     """
-    nlp = spacy.load('en_core_web_sm')
-    nlp.add_pipe("language_detector")
-    doc = nlp(text)
-    return doc._.language == 'en'
+    LANGUAGE = LanguageIdentification()
+    lang = LANGUAGE.predict_lang(text)
+    return lang[0][0] == '__label__en'
 
 
 def remove_non_english(df):
@@ -94,9 +109,11 @@ def remove_non_english(df):
     :param df: dataframe of ORKG data
     :return: the same dataframe with non-English papers removed
     """
-    df['is_english'] = [is_english(str(text)) for text in df['title']]
+    df['title_abstract'] = str(df['title']) + ' ' + str(df['abstract'])
+    df['title_abstract'] = [text.replace('\n', ' ').replace('\r', ' ') for text in df['title_abstract']]
+    df['is_english'] = [is_english(str(text)) for text in df['title_abstract']]
     df = df[df['is_english'] == True]
-    df = df.drop(columns=['is_english'])
+    df = df.drop(columns=['is_english', 'title_abstract'])
 
     return df
 
