@@ -143,6 +143,7 @@ def remove_duplicates(df):
 
     df['nan_count'] = [df.loc[index].isna().sum().sum() for index, row in df.iterrows()]
     df = df.sort_values('nan_count', ascending=True).drop_duplicates('title', keep='first').sort_index()
+    df = df.sort_values('nan_count', ascending=True).drop_duplicates('doi', keep='first').sort_index().append(df[df['doi'].isna()])
     df = df.drop(columns=['nan_count'])
 
     return df

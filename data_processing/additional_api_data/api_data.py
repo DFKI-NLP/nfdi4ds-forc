@@ -27,8 +27,6 @@ class APIData:
         - scraped data won't be used if doi was scraped
         - query API with the scraped doi
         - just use scraped data if no doi and if fuzzy string matching is above 95
-
-    See validation in function _author_validation()
     """
 
     def __init__(self, orkg_df: pd.DataFrame):
@@ -166,7 +164,7 @@ class APIData:
         else:
             data_dict['abstract'] = np.nan
 
-        return data_dict
+        return data_dictx
 
     def _handle_crossref_title_api_data(self, index: int, message: Dict) -> Tuple[Dict, bool]:
         """
