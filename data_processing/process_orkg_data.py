@@ -122,12 +122,3 @@ class ORKGData:
         self._strategy = strategy
 
 
-def remove_doi_dups(data_df):
-    """
-    removes rows of df where the doi is duplicated (keeps first one) and saves the data into a csv
-    :param data_df:
-    :return: -
-    """
-    data_df = data_df[(~data_df['doi'].duplicated()) | data_df['doi'].isna()]
-    data_df.to_csv('data_processing/data/orkg_data_science_conversion_no_dups.csv', index=False)
-

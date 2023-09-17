@@ -78,7 +78,7 @@ class ScienceLabelConverter:
         science_df.to_csv(export_path, index=False)
 
     def _relabel_science_manual(self, orkg_df,
-                               xlsx_path="/Users/rayaabuahmad/Documents/dfki-work/merged_data_relabeling_science.xlsx") \
+                               csv_path="data_processing/data/merged_data_relabeling_science.csv") \
             -> pd.DataFrame:
         """
         relabels the remaining 'Science' labels manually by:
@@ -87,7 +87,7 @@ class ScienceLabelConverter:
         :return:
 
         """
-        science_relabeled_df = pd.read_excel(xlsx_path)
+        science_relabeled_df = pd.csv(csv_path)
         orkg_df['label'] = [self._get_new_label(row, science_relabeled_df) for index, row in
                             orkg_df.iterrows()]
 
