@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from data_cleaning_utils import process_abstract, remove_non_english
 
-from arxiv_data import ArxivData
+from process_arxiv_data import ArxivData
 
 
 class MergedData:

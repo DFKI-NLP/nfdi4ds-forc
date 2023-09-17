@@ -18,7 +18,6 @@ FIELDS = ['Medicine', 'Biology', 'Chemistry', 'Engineering', 'Computer Science',
           'Mathematics', 'Psychology', 'Economics', 'Political Science', 'Business', 'Geology', 'Sociology',
           'Geography', 'Environmental Science', 'Art', 'History', 'Philosophy']
 
-logger = MyLogger('doi_finder').logger
 FILE_PATH = os.path.dirname(__file__)
 
 

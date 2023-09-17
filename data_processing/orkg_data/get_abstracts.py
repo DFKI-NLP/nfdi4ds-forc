@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from data_processing.data.data_api import APIData
+from additional_api_data.api_data import APIData
 
 
 class DataAbstracts:

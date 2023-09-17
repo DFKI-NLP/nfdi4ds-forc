@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 import os
-from typing import Dict
+from typing import Dict, List
 
 FILE_PATH = os.path.dirname(__file__)
 

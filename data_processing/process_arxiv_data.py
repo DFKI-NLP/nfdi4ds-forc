@@ -3,8 +3,8 @@ import json
 import os
 from typing import Dict
 
-from data_processing.arxiv_data_reduction import ArxivDataReduction
-from data_processing.orkg_data import ORKGData
+from reduce_arxiv_data import ArxivDataReduction
+from process_orkg_data import ORKGData
 
 FILE_PATH = os.path.dirname(__file__)
 
@@ -28,7 +28,7 @@ class ArxivData:
     """
 
     def __init__(self,
-                 arxiv_data_path="data_processing/data/arxiv_data/arxiv-metadata-oai-snapshot.json",
+                 arxiv_data_path="~/Documents/arxiv-metadata-oai-snapshot.json",
                  orkg_data_df_path="",
                  threshold_instances=50000):
         self.arxiv_data_path = arxiv_data_path

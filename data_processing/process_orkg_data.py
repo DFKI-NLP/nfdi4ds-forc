@@ -9,7 +9,7 @@ from orkg_data.orkgPyModule import ORKGPyModule
 from data_cleaning_utils import process_abstract_string, get_orkg_abstract_doi, get_orkg_abstract_title
 
 from orkg_data.clean_data import ORKGDataCleaner
-from orkg_data.science_label_converter import ScienceLabelConverter
+from orkg_data.convert_science_label import ScienceLabelConverter
 from orkg_data.get_abstracts import DataAbstracts
 
 
