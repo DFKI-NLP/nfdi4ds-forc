@@ -41,6 +41,7 @@ class ArxivData:
         self.arxiv_distribution_reduced = {}
         self.reduced_data = ArxivDataReduction(self.arxiv_df, self.arxiv_labels,
                                                self.arxiv_distribution, self.arxiv_distribution_reduced)
+        print("Got arXiv data...")
 
         # read orkg data from csv if path is given, if not, run ORKGData class
         if orkg_data_df_path != "":
@@ -56,9 +57,14 @@ class ArxivData:
         (consisting of a desired number of data points)
         """
         self.orkg_df, self.arxiv_df = self._drop_orkg_dups()
+        print("Dropped duplicates from arXiv data...")
         self.orkg_df = self._add_abstracts_orkg(self.arxiv_df)
+        print("Added missing abstracts...")
         reduced_arxiv_data = self._get_reduced_data(self.threshold_instances)
+        print(f"Sampled arXiv data to {len(self.threshold_instances)} instances...")
         reduced_arxiv_data = self._map_arxiv_to_orkg(reduced_arxiv_data)
+        print("Changed arXiv labels to ORKG taxonomy...")
+        print("Processed arXiv dataset...")
 
         return self.orkg_df, reduced_arxiv_data
 

@@ -27,9 +27,13 @@ class MergedData:
         Saves the merged dataset to data_processing/data/merged_data.csv.
         """
         merged_df = self._merge_datasets()
+        print("Merged dataset created...")
         merged_df = self._process_abstracts(merged_df)
+        print("Preprocessed abstracts...")
         merged_df = remove_non_english(merged_df)
+        print("Removed non-English papers...")
         merged_df.to_csv('data_processing/data/merged_data.csv')
+        print("Merged dataset saved to data_processing/data/merged_data.csv")
 
     def _merge_datasets(self) -> pd.DataFrame:
         """

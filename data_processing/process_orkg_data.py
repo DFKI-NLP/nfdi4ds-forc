@@ -58,10 +58,15 @@ class ORKGData:
         The output is the processed ORKG dataset in the format of a pd.DataFrame.
         """
         self._load_label_data()
+        print("Got ORKG data...")
         self.orkg_df = ORKGDataCleaner(self.orkg_df).run()
+        print("Cleaned ORKG data...")
         self.orkg_df = DataAbstracts(self.orkg_df).run()
+        print("Add abstracts...")
         self.orkg_df = ScienceLabelConverter(self.orkg_df).run()
+        print("Converted 'Science' labels...")
         self.orkg_df = self._reduce_rf()
+        print("Reduced number of labels...")
 
         return self.orkg_df
 
@@ -120,5 +125,3 @@ class ORKGData:
     @strategy.setter
     def strategy(self, strategy: Strategy) -> None:
         self._strategy = strategy
-
-
