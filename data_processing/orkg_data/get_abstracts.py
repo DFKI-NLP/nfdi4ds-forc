@@ -45,7 +45,8 @@ class DataAbstracts:
             if bool(sem_field):
                 self.orkg_df.at[index, 'abstract'] = sem_field['abstract']
 
-        self.orkg_df['openalex_field'] = [api_data.get_openalex_data(row['title'], index)
+        self.orkg_df['openalex_field'] = [api_data.get_openalex_data('https://doi.org/' + row['doi'], index)
+                                          if not pd.isnull(row['doi']) else np.NaN
                                           for index, row in self.orkg_df.iterrows()]
 
         # make all non-existent abstract cells NaN

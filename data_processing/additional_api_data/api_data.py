@@ -129,7 +129,7 @@ class APIData:
 
         return data_dict
 
-    def get_openalex_data(self, title:str, index: int) -> Dict:
+    def get_openalex_data(self, doi: str) -> Dict:
         """
         Provides dictionary of data collected from OpenAlex using the pyalex library.
 
@@ -146,25 +146,27 @@ class APIData:
             Dict that holds api data
         """
 
-        if pd.isnull(title):
+        if pd.isnull(doi):
             return {}
 
         try:
-            openalex_data = Works().search_filter(title=title).get()
+            openalex_data = Works()[doi]
 
         except ConnectionError:
             time.sleep(60)
-            openalex_data = Works().search_filter(title=title).get()
+            openalex_data = Works()[doi]
 
-        data_dict = {}
+        except HTTPError:
+            openalex_data = np.nan
 
-        data_dict['title'] = title
-        if openalex_data != []:
-            data_dict['abstract'] = openalex_data[0]['abstract']
+        data_dict = {'doi': doi}
+
+        if type(openalex_data) != float:
+            data_dict['abstract'] = openalex_data['abstract']
         else:
             data_dict['abstract'] = np.nan
 
-        return data_dictx
+        return data_dict
 
     def _handle_crossref_title_api_data(self, index: int, message: Dict) -> Tuple[Dict, bool]:
         """
@@ -227,9 +229,9 @@ class APIData:
         authors = [person.get('given', '') + ' ' + person.get('family', '') for person in message.get('author', [])]
 
         valid_data = self.data_validation.validate_data(
-         message.get('title', '')[0], self.orkg_df.at[index, 'title'], authors, self.orkg_df.at[index, 'author'],
-         message.get('DOI', ''), self.orkg_df.at[index, 'doi']
-       )
+            message.get('title', '')[0], self.orkg_df.at[index, 'title'], authors, self.orkg_df.at[index, 'author'],
+            message.get('DOI', ''), self.orkg_df.at[index, 'doi']
+        )
 
         data_dict = {}
         if valid_data:
@@ -316,9 +318,9 @@ class APIData:
         author_names = [person.get('name', '') for person in content_dict_scholar.get('authors', [])]
 
         valid_data = self.data_validation.validate_data(
-        content_dict_scholar.get('title', ''), self.orkg_df.at[index, 'title'], author_names,
-        self.orkg_df.at[index, 'author'], content_dict_scholar.get('doi', ''), self.orkg_df.at[index, 'doi']
-    )
+            content_dict_scholar.get('title', ''), self.orkg_df.at[index, 'title'], author_names,
+            self.orkg_df.at[index, 'author'], content_dict_scholar.get('doi', ''), self.orkg_df.at[index, 'doi']
+        )
         data_dict = {}
         if valid_data:
             abstract = process_abstract_string(content_dict_scholar.get('abstract', ''))

@@ -10,7 +10,7 @@ from data_cleaning_utils import process_abstract_string, get_orkg_abstract_doi, 
 
 from orkg_data.clean_data import ORKGDataCleaner
 from orkg_data.science_label_converter import ScienceLabelConverter
-from orkg_data.abstracts import DataAbstracts
+from orkg_data.get_abstracts import DataAbstracts
 
 
 

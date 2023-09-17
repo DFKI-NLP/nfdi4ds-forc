@@ -30,7 +30,6 @@ class MergedData:
         merged_df = self._process_abstracts(merged_df)
         merged_df = remove_non_english(merged_df)
         merged_df.to_csv('data_processing/data/merged_data.csv')
-        self._visualize_nan_columns(merged_df)
 
     def _merge_datasets(self) -> pd.DataFrame:
         """
@@ -62,23 +61,6 @@ class MergedData:
         """
         merged_df['abstract'] = merged_df['abstract'].apply(lambda x: process_abstract(x) if not pd.isna(x) else x)
         return merged_df
-
-    def _visualize_nan_columns(self, merged_df: pd.DataFrame):
-        """
-        Visualizes the number of NaN elements per column in merged_df.
-        """
-        columns = merged_df.columns.to_list()
-        nan_info = {}
-        for column in columns:
-            nan_info[column] = merged_df[column].isna().sum()
-
-        plt.figure(figsize=(20, 7))
-        plt.bar(range(len(nan_info)), list(nan_info.values()), align='center', color=(0.2, 0.4, 0.6, 0.6))
-        plt.xticks(range(len(nan_info)), list(nan_info.keys()))
-        plt.xticks(rotation=35)
-        plt.title('Number of NaN elements per column in Dataframe '
-                  '(overall number of papers is {})'.format(len(merged_df)))
-        plt.show()
 
 
 if __name__ == '__main__':

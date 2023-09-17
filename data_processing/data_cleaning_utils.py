@@ -105,9 +105,9 @@ def is_english(text):
 
 def remove_non_english(df):
     """
-    Removes papers that are not in English (according to title) from the ORKG fetched data.
-    :param df: dataframe of ORKG data
-    :return: the same dataframe with non-English papers removed
+    Removes papers that are not in English (according to title and abstract).
+    :param df: dataset
+    :return: the same dataset with non-English papers removed
     """
     df['title_abstract'] = str(df['title']) + ' ' + str(df['abstract'])
     df['title_abstract'] = [text.replace('\n', ' ').replace('\r', ' ') for text in df['title_abstract']]
