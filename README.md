@@ -23,7 +23,7 @@ The dataset construction pipeline consists of:
 Before running the code, the following datasets need to be installed:
 
 1. An arXiv snapshot: https://www.kaggle.com/datasets/Cornell-University/arxiv?resource=download. Note that the path in ```data_processing/process_arxiv_data.py``` needs to be modified if changed from the default.
-2. The file ```lid.176.bin``` from the fastText language identification package. The file needs to be unzipped and the path in ```data_processing/data_cleaning_utils.py``` needs to be modified if changed from the default.
+2. The file ```lid.176.bin``` from the fastText language identification package: https://fasttext.cc/docs/en/language-identification.html. The file needs to be unzipped and the path in ```data_processing/data_cleaning_utils.py``` needs to be modified if changed from the default.
 
 Navigate to the repository directory and run the following commands:
 
