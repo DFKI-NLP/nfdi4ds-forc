@@ -28,12 +28,11 @@ class ArxivData:
     """
 
     def __init__(self,
-                 arxiv_data_path="~/Documents/arxiv-metadata-oai-snapshot.json",
+                 arxiv_data_path="~/Documents/test.nosync/arxiv-metadata-oai-snapshot.json",
                  orkg_data_df_path="",
                  threshold_instances=50000):
         self.arxiv_data_path = arxiv_data_path
         self.arxiv_df = pd.read_json(self.arxiv_data_path, lines=True)
-        self.orkg_df = pd.read_csv(orkg_data_df_path)
         self.threshold_instances = threshold_instances
         self.mapping_arxiv_orkg = self._load_mapping('data/mappings/arxiv_to_orkg_fields.json')
         self.arxiv_labels = list(self.mapping_arxiv_orkg.keys())

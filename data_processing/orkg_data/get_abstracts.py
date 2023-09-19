@@ -5,9 +5,8 @@ from additional_api_data.api_data import APIData
 
 
 class DataAbstracts:
-    def __init__(self, orkg_df: pd.DataFrame, email: str):
+    def __init__(self, orkg_df: pd.DataFrame):
         self.orkg_df = orkg_df
-        self.email = email
 
     def run(self) -> pd.DataFrame:
         """

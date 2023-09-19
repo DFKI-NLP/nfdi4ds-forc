@@ -2,16 +2,14 @@ import pandas as pd
 from additional_api_data.doi_finder import DoiFinder
 from data_cleaning_utils import process_abstract_string
 from fuzzywuzzy import fuzz
+from pyalex import Works
 from typing import List, Tuple, Dict
 import requests
 import urllib.parse
 import json
 import os
 import time
-
 import string
-import pyalex
-from pyalex import Works
 
 from additional_api_data.api_scheduler import APIScheduler
 from additional_api_data.data_validation import DataValidation
@@ -39,7 +37,7 @@ class APIData:
         df: pd.Dataframe
             obj reference
         """
-        assert 'title' in df and 'author' in df and 'publisher' in df and 'url' in df
+        assert 'title' in orkg_df and 'author' in orkg_df and 'publisher' in orkg_df and 'url' in orkg_df
         self.orkg_df = orkg_df
         self.api_scheduler = APIScheduler()
         self.data_validation = DataValidation(level=2)

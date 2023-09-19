@@ -3,7 +3,7 @@ import re
 import spacy
 from nameparser import HumanName
 import fasttext
-
+import string
 
 class LanguageIdentification:
     """

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from data_cleaning_utils import process_abstract, remove_non_english
 
 from process_arxiv_data import ArxivData
+from process_orkg_data import ORKGData
 
 
 class MergedData:
@@ -68,5 +69,8 @@ class MergedData:
 
 
 if __name__ == '__main__':
-    merged_data = MergedData()
-    merged_data.run()
+    #merged_data = MergedData()
+    #merged_data.run()
+
+    orkg_data = ORKGData()
+    orkg_data.run()

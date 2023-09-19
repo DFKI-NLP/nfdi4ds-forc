@@ -30,7 +30,7 @@ class ORKGDataCleaner:
         self.orkg_df = remove_duplicates(self.orkg_df)
         self.orkg_df = self._parse_authors_orkg(self.orkg_df)
 
-        return self.df
+        return self.orkg_df
 
     def _parse_authors_orkg(self, orkg_df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -39,13 +39,22 @@ class ORKGDataCleaner:
         orkg_df['authors_parsed'] = ''
         for index, row in orkg_df.iterrows():
 
-            if not pd.isna(row['author']):
-                if row['author'].startswith('['):
-                    author_list = ast.literal_eval(row['author'])
-                    authors_list_parsed = []
-                    for author in author_list:
-                        authors_list_parsed.append(parse_author(author))
-                    orkg_df.at[index, 'authors_parsed'] = authors_list_parsed
-                else:
-                    orkg_df.at[index, 'authors_parsed'] = parse_author(row['author'])
+            if type(row['author']) != float:
+
+                if type(row['author']) == str:
+                    if row['author'].startswith('['):
+                        author_list = ast.literal_eval(row['author'])
+                    else:
+                        orkg_df.at[index, 'authors_parsed'] = parse_author(row['author'])
+                        return orkg_df
+                    
+                elif type(row['author']) == list:
+                    author_list = row['author']
+
+                authors_list_parsed = []
+                for author in author_list:
+                    authors_list_parsed.append(parse_author(author))
+                orkg_df.at[index, 'authors_parsed'] = authors_list_parsed
+            
+
         return orkg_df

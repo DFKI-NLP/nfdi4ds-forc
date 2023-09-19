@@ -81,4 +81,4 @@ class ArxivDataReduction:
         :param arxiv_df: the arXiv dataset of single-labels
         :return: n_instances of randomly selected rows with the input label from arxiv_df
         """
-        return arxiv_df.query("categories == '{}'".format(label)).sample(n=n_instances)
+        return arxiv_df.query("categories == '{}'".format(label)).sample(n=n_instances, random_state=42)
