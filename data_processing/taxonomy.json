@@ -1,0 +1,194 @@
+{
+    "name": "ORKG-taxonomy",
+    "children": [
+        {
+            "name": "Physical Sciences and Mathematics",
+            "children": [
+                { "name": "Physics",
+                    "children": [
+                        { "name": "Quantum Physics" },
+                        { "name": "Nonlinear Sciences" },
+                        { "name": "Atomic, Molecular and Optical Physics" },
+                        { "name": "Condensed Matter Physics" },
+                        { "name": "Optics" },
+                        { "name": "Fluid Dynamics" },
+                        { "name": "Plasma and Beam Physics" },
+                        { "name": "Biological and Chemical Physics" },
+                        { "name": "Computational Physics" },
+                        { "name": "Medical Physics" },
+                        { "name": "Physics Education" },
+                        { "name": "History and Philosophy of Physics" },
+                        { "name": "Data Analysis, Statistics and Probability" },
+                        { "name": "Space Physics" },
+                        { "name": "Popular Physics" }
+                    ]},
+                { "name": "Cosmology, Relativity, and Gravity" },
+                { "name": "Astrophysics and Astronomy", 
+                    "children": [
+                        { "name": "The Sun and the Solar System" },
+                        { "name": "External Galaxies" },
+                        { "name": "Cosmology" },
+                        { "name": "Physical Processes" },
+                        { "name": "Instrumentation" }
+                    ]},
+                { "name": "Mathematics", 
+                    "children": [
+                        { "name": "Dynamics/Dynamical Systems" },
+                        { "name": "Geometry and Topology" },
+                        { "name": "Discrete Mathematics and Combinatorics" },
+                        { "name": "Analysis" },
+                        { "name": "Number Theory" },
+                        { "name": "Algebraic Geometry" },
+                        { "name": "Algebra" },
+                        { "name": "Set Theory" },
+                        { "name": "Logic and Foundations" },
+                        { "name": "Complex Variables" },
+                        { "name": "Category Theory" },
+                        { "name": "Mathematics History and Overview" },
+                        { "name": "Mathematical Software" }
+                    ]},
+                { "name": "Computer Sciences",
+                    "children": [
+                        { "name": "Computer Vision and Pattern Recognition" },
+                        { "name": "Artificial Intelligence",
+                            "children": [
+                                { "name": "Machine Learning" },
+                                { "name": "Image and Video Processing" },
+                                { "name": "Multiagent Systems" },
+                                { "name": "Audio and Speech Processing" }
+                            ] },
+                        { "name": "Theory/Algorithms",
+                            "children": [
+                                { "name": "Computational Geometry"}
+                            ]},
+                        { "name": "Software Engineering" },
+                        { "name": "Cryptography and Security" },
+                        { "name": "Databases/Information Systems",
+                            "children": [
+                                { "name": "Digital Libraries" }
+                            ] },
+                        { "name": "Human Computer Interfaces" },
+                        { "name": "Programming Languages/Compilers" },
+                        { "name": "Computers and Society" },
+                        { "name": "Information Systems, Process and Knowledge Management" },
+                        { "name": "Computer Science and Game Theory" },
+                        { "name": "Security and Dependability" },
+                        { "name": "Graphics" },
+                        { "name": "OS/Networks" }
+                    ]},
+                { "name": "Statistics and Probability",
+                    "children": [
+                        { "name": "Statistical Methodology" },
+                        { "name": "Applied Statistics" }
+                    ] },
+                { "name": "Applied Mathematics",
+                    "children": [
+                        { "name": "Numerical Analysis and Computation" }
+                    ] },
+                { "name": "Chemistry" },
+                { "name": "Earth Sciences",
+                    "children": [
+                        { "name": "Environmental Sciences" },
+                        { "name": "Geophysics and Seismology" }
+                    ] },
+                { "name": "Oceanography and Atmospheric Sciences and Meteorology",
+                    "children": [
+                        { "name": "Oceanography" },
+                        { "name": "Atmospheric Sciences" }
+                    ]}
+            ]
+        },
+{
+ "name": "Engineering",
+ "children": [
+    {"name": "Information Science"},
+    {"name": "Operations Research, Systems Engineering and Industrial Engineering"},
+    {"name": "Electrical and Computer Engineering",
+    "children": [
+        {"name": "Signal Processing"},
+        {"name": "Controls and Control Theory"}
+        ]},
+    {"name": "Computational Engineering"},
+    {"name": "Nanoscience and Nanotechnology"},
+    {"name": "Mechanical Engineering",
+     "children": [
+        {"name": "Energy Systems"}
+    ]},
+    {"name": "Civil and Environmental Engineering"},
+    {"name": "Biomedical Engineering and Bioengineering", 
+    "children": [
+        {"name": "Molecular, cellular, and tissue engineering",
+        "children": [
+            {"name": "Tissues and Organs"}
+        ]}
+    ]}
+]
+},
+{
+    "name": "Life Sciences",
+    "children": [
+        { "name": "Bioinformatics" },
+        { "name": "Ecology and Evolutionary Biology",
+            "children": [
+                { "name": "Population Biology" }
+            ]},
+        { "name": "Microbiology" },
+        { "name": "Nursing Pharmacology, Toxicology and Environmental Health",
+            "children" : [
+                { "name": "Toxicology" },
+                { "name": "Medicinal Chemistry and Pharmaceutics" }
+            ]},
+        { "name": "Animal Sciences" },
+        { "name": "Medicine" },
+        { "name": "Biology/Integrated Biology/ Integrated Biomedical Sciences",
+            "children": [
+                { "name": "Motor Control" },
+                { "name": "Quantitative Methods" }
+            ]},
+        { "name": "Biochemistry, Biophysics, and Structural Biology",
+            "children": [
+                { "name": "Molecular Biology"}
+            ]},
+        { "name": "Neuroscience and Neurobiology" },
+        { "name": "Public Health" },
+        { "name": "Genetics and Genomics",
+            "children" : [
+                { "name": "Genomics"}
+            ]},
+        { "name": "Cell and Developmental Biology", 
+            "children": [
+                { "name": "Cell Behavior"}
+            ]}
+    ]
+},
+{
+    "name": "Social and Behavioral Sciences",
+    "children": [
+        { "name": "Linguistics",
+            "children": [
+                { "name": "Computational Linguistics" }
+            ] },
+        { "name": "Public Affairs, Public Policy and Public Administration" },
+        { "name": "Economics",
+            "children": [
+                { "name": "Quantitative Finance" },
+                { "name": "Econometrics" },
+                { "name": "Economic Theory" }
+            ] },
+        { "name": "Sociology",
+            "children": [
+                { "name": "Physics and Society" }
+            ] },
+        { "name": "Communication Sciences",
+            "children": [
+                { "name": "Communication Technology and New Media" }
+            ] },
+        { "name": "Science and Technology Studies" },
+        { "name": "Psychology" }
+    ]
+},
+{
+    "name": "Arts and Humanities"
+}
+    ]
+}
