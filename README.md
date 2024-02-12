@@ -1,10 +1,4 @@
 # Field of Research Classification (FoRC)
-<p align="center">
-  <img src="https://github.com/ryabhmd/nfdi4ds-forc/assets/77779090/c9a3abec-0742-4c39-86da-5df76ce253a5" />
-
-</p>
-
-This is a repository for the dataset of the **Field of Research Classification (FoRC)** shared task, as part of the [NFDI for Data Science and Artificial Intelligence](https://www.nfdi4datascience.de/) project. Additionally, it is used for my master's thesis at Osnabrück University's Institute of Cognitive Science. 
 
 ## Overview
 
