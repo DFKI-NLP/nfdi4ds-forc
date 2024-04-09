@@ -41,3 +41,9 @@ python data_processing/process_merged_data.py
 
 
 This will create a dataset at ```data_processing/data/merged_data.csv```. 
+
+### Contribution
+
+This repository was developed by Raia Abu Ahmad (raia.abu_ahmad@dfki.de).
+
+The initial basis for the data construction code was developed by the ORKG team. We used their code and developed it further. Their current version can be found at https://gitlab.com/TIBHannover/orkg/nlp/experiments/orkg-research-fields-classifier.
